@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>角色 Persona 生成器 | 以洛天依为测试案例</title>
+  <style>
+    :root {
+      --ink: #14232d;
+      --muted: #52616b;
+      --line: #d8e4e8;
+      --paper: #f8fbfc;
+      --white: #ffffff;
+      --tianyi: #66ccff;
+      --cyan-deep: #147fa6;
+      --green: #20a67a;
+      --coral: #ef6f5a;
+      --violet: #6a5acd;
+      --gold: #b58b18;
+      --shadow: 0 16px 38px rgba(20, 35, 45, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.65;
+    }
+
+    a {
+      color: var(--cyan-deep);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar a {
+      padding: 6px 10px;
+      border-radius: 6px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    .topbar a:hover {
+      background: #edf6fa;
+    }
+
+    .hero {
+      min-height: 88vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      align-items: center;
+      gap: 34px;
+      padding: 58px clamp(20px, 5vw, 72px) 42px;
+      background:
+        radial-gradient(circle at 20% 25%, rgba(102, 204, 255, 0.34), transparent 34%),
+        linear-gradient(140deg, #ffffff 0%, #eef9fc 46%, #f8fbfc 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--cyan-deep);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 880px;
+      font-size: clamp(40px, 6vw, 78px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 22px 0 0;
+      color: #2e4856;
+      font-size: clamp(17px, 2.1vw, 22px);
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 6px 11px;
+      border: 1px solid rgba(20, 127, 166, 0.24);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
+      color: #274250;
+    }
+
+    .stage {
+      position: relative;
+      min-height: 480px;
+      overflow: hidden;
+      border: 1px solid rgba(20, 127, 166, 0.18);
+      border-radius: 8px;
+      background: #071922;
+      box-shadow: var(--shadow);
+    }
+
+    #stageCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .stage-label {
+      position: absolute;
+      left: 20px;
+      right: 20px;
+      bottom: 18px;
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 8px;
+      background: rgba(6, 22, 30, 0.68);
+      color: white;
+      backdrop-filter: blur(10px);
+    }
+
+    .stage-label strong {
+      font-size: 18px;
+    }
+
+    .stage-label span {
+      color: #cbeefb;
+      font-size: 14px;
+    }
+
+    section {
+      padding: 58px clamp(20px, 5vw, 72px);
+      border-top: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    section.alt {
+      background: #eef6f7;
+    }
+
+    .section-head {
+      display: grid;
+      gap: 10px;
+      max-width: 980px;
+      margin-bottom: 28px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(28px, 3.4vw, 44px);
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 900px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .panel,
+    .artist-card,
+    .demo,
+    .sample-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 8px 20px rgba(20, 35, 45, 0.06);
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel h3,
+    .demo h3 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step {
+      min-height: 118px;
+      padding: 14px;
+      border: 1px solid rgba(20, 127, 166, 0.24);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .step b {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--cyan-deep);
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .lineage {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .artist-card {
+      padding: 18px;
+      min-height: 240px;
+    }
+
+    .artist-card h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .artist-card ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+    }
+
+    .tagline {
+      display: inline-flex;
+      padding: 4px 8px;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tagline.blue {
+      background: #dff5ff;
+      color: #126f90;
+    }
+
+    .tagline.green {
+      background: #def7ed;
+      color: #177455;
+    }
+
+    .tagline.coral {
+      background: #ffe5df;
+      color: #a43d2d;
+    }
+
+    .tagline.violet {
+      background: #ece8ff;
+      color: #5845a8;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #e8f5f8;
+      color: #1d4455;
+      font-weight: 700;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .rule-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .rule-list .panel {
+      border-top: 5px solid var(--tianyi);
+    }
+
+    .demo {
+      overflow: hidden;
+    }
+
+    .simulator {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .sim-card {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 8px 20px rgba(20, 35, 45, 0.06);
+    }
+
+    .scenario-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .scenario-buttons button,
+    .run-button {
+      min-height: 42px;
+      border: 1px solid rgba(20, 127, 166, 0.3);
+      border-radius: 6px;
+      background: #eef9fc;
+      color: #143240;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .scenario-buttons button:hover,
+    .run-button:hover {
+      background: #dff5ff;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      resize: vertical;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--ink);
+      background: #fbfdfe;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .field label {
+      color: var(--cyan-deep);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--ink);
+      background: #fbfdfe;
+    }
+
+    .run-button {
+      width: 100%;
+      margin-top: 12px;
+      background: var(--cyan-deep);
+      color: white;
+      border-color: var(--cyan-deep);
+      font-weight: 700;
+    }
+
+    .run-button:hover {
+      background: #0f6b8d;
+    }
+
+    .sim-output {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-block {
+      padding: 14px;
+      border-radius: 8px;
+      background: #f5fbfd;
+      border: 1px solid var(--line);
+    }
+
+    .result-block b {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--cyan-deep);
+    }
+
+    .demo-header {
+      padding: 16px 18px;
+      background: #102f3b;
+      color: white;
+    }
+
+    .demo-body {
+      display: grid;
+      grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+      gap: 0;
+    }
+
+    .input,
+    .output {
+      padding: 18px;
+    }
+
+    .input {
+      background: #f2f8fa;
+      border-right: 1px solid var(--line);
+    }
+
+    .output p {
+      margin: 0 0 12px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--cyan-deep);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    code,
+    pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      padding: 14px;
+      border-radius: 8px;
+      background: #102f3b;
+      color: #d9f8ff;
+      font-size: 14px;
+      line-height: 1.58;
+    }
+
+    .evidence {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .quote {
+      padding: 18px;
+      border-left: 5px solid var(--coral);
+      background: #fff8f6;
+      border-radius: 0 8px 8px 0;
+      color: #51342f;
+      font-size: 18px;
+    }
+
+    .commitment-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .commitment {
+      min-height: 210px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 8px 20px rgba(20, 35, 45, 0.06);
+    }
+
+    .commitment strong {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      margin-bottom: 12px;
+      border-radius: 50%;
+      background: var(--tianyi);
+      color: #062432;
+    }
+
+    .commitment h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .commitment p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .footer {
+      padding: 36px clamp(20px, 5vw, 72px);
+      background: #10242c;
+      color: #d8edf3;
+    }
+
+    .footer p {
+      margin: 0;
+      max-width: 980px;
+    }
+
+    @media (max-width: 1020px) {
+      .hero,
+      .grid.two,
+      .grid.three,
+      .lineage,
+      .rule-list,
+      .simulator,
+      .commitment-grid,
+      .evidence {
+        grid-template-columns: 1fr;
+      }
+
+      .flow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .demo-body {
+        grid-template-columns: 1fr;
+      }
+
+      .input {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        justify-content: flex-start;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 34px;
+      }
+
+      .stage {
+        min-height: 360px;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .scenario-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .topbar {
+        position: static;
+      }
+
+      .stage,
+      canvas {
+        display: none;
+      }
+
+      section,
+      .hero {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar" aria-label="页面导航">
+    <a href="#question">研究问题</a>
+    <a href="#commitment">作业对应</a>
+    <a href="#lineage">艺术家谱系</a>
+    <a href="#method">方法</a>
+    <a href="#samples">样本库</a>
+    <a href="#rules">Persona 规则</a>
+    <a href="#simulator">模拟器</a>
+    <a href="#demo">Demo</a>
+    <a href="#evaluation">评估</a>
+    <a href="#conclusion">结论</a>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <p class="eyebrow">最终作业 | 通用 Persona 工具原型 + 洛天依测试案例</p>
+      <h1>角色 Persona 生成器</h1>
+      <p class="subtitle">这是一个面向虚拟角色的 persona 生成器原型：用户可以添加角色设定、台词、视觉特征和社群规则，再输入场景，生成角色回复、动作描写、图像提示词，并检查“像不像”。本次作业用洛天依跑通完整流程。</p>
+      <div class="meta-row">
+        <span class="pill">通用工具：任意角色 persona 建立</span>
+        <span class="pill">测试案例：洛天依</span>
+        <span class="pill">主路径：Persona</span>
+        <span class="pill">辅助路径：小型数据集</span>
+        <span class="pill">流程：样本标注 -> 规则表 -> 模拟器 -> 评估</span>
+        <span class="pill">汇报人：在这里改你的名字</span>
+      </div>
+    </div>
+    <div class="stage" aria-label="蓝色全息舞台视觉">
+      <canvas id="stageCanvas"></canvas>
+      <div class="stage-label">
+        <strong>#66CCFF / 天依蓝</strong>
+        <span>通用角色规则、案例样本、粉丝判断与 AI 生成共同构成一个可测试的 persona 原型。</span>
+      </div>
+    </div>
+  </header>
+
+  <section id="question">
+    <div class="section-head">
+      <p class="eyebrow">01 研究问题</p>
+      <h2>虚拟角色如何成为现实身份的一部分？</h2>
+      <p class="lead">我的问题不是“介绍某一个角色”，而是：如果用户把一个虚拟角色的设定、台词、视觉特征和社群规则交给 AI，AI 能不能生成稳定的角色视角？这种“像不像”又应该由谁判断？</p>
+    </div>
+    <div class="grid three">
+      <article class="panel">
+        <h3>官方设定</h3>
+        <p>角色姓名、身份、外形、世界观、代表物件和官方语音，给 persona 提供基础边界。</p>
+      </article>
+      <article class="panel">
+        <h3>粉丝共创</h3>
+        <p>二创、cos、语擦、弹幕、评论和社群梗会继续补充角色，使角色身份变成共同维护的结果。</p>
+      </article>
+      <article class="panel">
+        <h3>AI 生成</h3>
+        <p>模型可以按规则生成角色回复和画面提示词，但“像不像”仍要接受原始资料和粉丝判断的检验。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="commitment" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">02 对照汇报内容</p>
+      <h2>当时汇报说要做的四件事，现在都落在成品里</h2>
+      <p class="lead">最终作品不是“只有网页”，而是把网页作为容器，承载通用角色规则、AI 角色视角生成器、像不像评估和在线提交链接。洛天依是本次用于验证流程的案例。</p>
+    </div>
+    <div class="commitment-grid">
+      <article class="commitment">
+        <strong>1</strong>
+        <h3>角色 Persona 规则表</h3>
+        <p>整理任意角色的说话方式、视觉特征、性格逻辑、粉丝社群规则和禁忌表达，把“像不像”变成可检查的规则。</p>
+      </article>
+      <article class="commitment">
+        <strong>2</strong>
+        <h3>AI 角色视角生成器</h3>
+        <p>输入角色设定和场景，生成角色回复、动作 / 表情描写和图像提示词。页面中的“可操作原型”就是这部分成品。</p>
+      </article>
+      <article class="commitment">
+        <strong>3</strong>
+        <h3>像不像评估表</h3>
+        <p>把 AI 输出和原始资料对照，按语气、视觉、身份、社群回应、是否 OOC 五个维度打分。</p>
+      </article>
+      <article class="commitment">
+        <strong>4</strong>
+        <h3>GitHub Pages 展示网页</h3>
+        <p>最终以 HTML 网页发布，老师和同学可以直接打开链接查看研究过程、模拟器原型和评估结果。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="lineage">
+    <div class="section-head">
+      <p class="eyebrow">03 艺术家谱系</p>
+      <h2>20 个艺术家档案不是名单，而是参照系</h2>
+      <p class="lead">我把之前建立的艺术家档案分成四条线，用它们说明我的项目站在“虚拟化身、网络人格、游戏社群、数字身体”交汇的位置。</p>
+    </div>
+    <div class="lineage">
+      <article class="artist-card">
+        <span class="tagline blue">虚拟化身 / 数字角色</span>
+        <h3>角色如何拥有身体</h3>
+        <ul>
+          <li>LuYang</li>
+          <li>曹斐</li>
+          <li>LaTurbo Avedon</li>
+          <li>Ian Cheng</li>
+          <li>Skawennati</li>
+        </ul>
+      </article>
+      <article class="artist-card">
+        <span class="tagline coral">网络人格 / 社交媒体表演</span>
+        <h3>身份如何被观看</h3>
+        <ul>
+          <li>Amalia Ulman</li>
+          <li>Ann Hirsch</li>
+          <li>Signe Pierce</li>
+          <li>Mouchette / Martine Neddam</li>
+        </ul>
+      </article>
+      <article class="artist-card">
+        <span class="tagline green">游戏 / 虚拟世界 / 社群规则</span>
+        <h3>互动如何测试 persona</h3>
+        <ul>
+          <li>Angela Washko</li>
+          <li>Eva and Franco Mattes</li>
+          <li>Jon Rafman</li>
+          <li>Lawrence Lek</li>
+        </ul>
+      </article>
+      <article class="artist-card">
+        <span class="tagline violet">身体、身份与 AI / 数据化表达</span>
+        <h3>角色如何被模型化</h3>
+        <ul>
+          <li>Cecile B. Evans</li>
+          <li>Ed Atkins</li>
+          <li>Martine Syms</li>
+          <li>Jacolby Satterwhite</li>
+          <li>Meriem Bennani</li>
+          <li>Rachel Rossin</li>
+          <li>Morehshin Allahyari</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section id="method" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">04 方法</p>
+      <h2>主路径是 Persona，小型数据集作为辅助</h2>
+      <p class="lead">我不同时做三条路线，而是选择“建立一个通用角色视角生成流程，让 AI 能根据用户添加的设定稳定输出”。小型数据集只用来支撑 persona 规则，不做大规模模型训练。</p>
+    </div>
+    <div class="flow" aria-label="项目工作流">
+      <div class="step"><b>1. 添加角色</b><span>输入角色设定、台词、视觉、粉丝语擦和评论。</span></div>
+      <div class="step"><b>2. 样本标注</b><span>把样本标成语言、视觉、性格、禁忌、社群规则。</span></div>
+      <div class="step"><b>3. 规则表</b><span>整理这个角色的稳定 persona 生成规则。</span></div>
+      <div class="step"><b>4. Prompt</b><span>把规则写成 AI 可以执行的 system prompt。</span></div>
+      <div class="step"><b>5. Demo</b><span>测试问候、生日 / 纪念日、OOC、舞台或日常互动。</span></div>
+      <div class="step"><b>6. 评估</b><span>按“像不像 / 是否稳定 / 是否越界”打分。</span></div>
+    </div>
+  </section>
+
+  <section id="samples">
+    <div class="section-head">
+      <p class="eyebrow">05 样本库</p>
+      <h2>通用样本库结构：本次用洛天依填入 30 条样本</h2>
+      <p class="lead">样本不是为了堆资料，而是为了提取可执行的角色规则。这个表格结构可以换成任意角色；本次作业用洛天依作为测试数据。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>类型</th>
+            <th>样本摘要</th>
+            <th>提取出的规则</th>
+            <th>用于哪里</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>官方设定</td>
+            <td>中文虚拟歌姬 / Vsinger 旗下虚拟歌手，生日 7 月 12 日，代表色 #66CCFF。</td>
+            <td>身份不是普通真人，而是声库、角色和虚拟艺人的结合。</td>
+            <td>基础身份 prompt</td>
+          </tr>
+          <tr>
+            <td>视觉形象</td>
+            <td>蓝白灰色系、麦克风、舞台灯光、全息投影、天依蓝。</td>
+            <td>图像提示词必须保留虚拟歌姬和数字舞台感。</td>
+            <td>图像生成 Demo</td>
+          </tr>
+          <tr>
+            <td>演唱会 / 生日会</td>
+            <td>全息演唱会、生日应援、蓝色荧光棒、祝花、粉丝留言。</td>
+            <td>角色身份进入现实，是通过舞台技术和粉丝仪式完成的。</td>
+            <td>现实身份论证</td>
+          </tr>
+          <tr>
+            <td>代表歌曲</td>
+            <td>《普通DISCO》《权御天下》《达拉崩吧》《追光使者》等形成平台记忆。</td>
+            <td>洛天依不只有甜美，也能承载轻快、古风、叙事和鼓励。</td>
+            <td>多场景 Demo</td>
+          </tr>
+          <tr>
+            <td>粉丝社群</td>
+            <td>弹幕、收藏、二创、P 主、调教师、曲绘、PV 共同塑造角色。</td>
+            <td>“像不像”不能只看官方设定，还要看粉丝共同记忆。</td>
+            <td>像不像评估</td>
+          </tr>
+          <tr>
+            <td>禁忌规则</td>
+            <td>把她写成普通真人、恋爱陪聊、客服式 AI，都会偏离角色。</td>
+            <td>必须避免真人化过度、暧昧化、客服化。</td>
+            <td>OOC 检测</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="rules" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">06 Persona 规则</p>
+      <h2>让 AI 稳定输出，需要把角色拆成规则</h2>
+      <p class="lead">规则表是这个项目的核心产物。它把“我觉得像”变成可以测试、可以修改的生成条件。</p>
+    </div>
+    <div class="rule-list">
+      <article class="panel">
+        <h3>身份规则</h3>
+        <p>中文虚拟歌姬、声库角色、Vsinger 旗下虚拟艺人。不是现实真人，也不是普通 AI 客服。</p>
+      </article>
+      <article class="panel">
+        <h3>语言规则</h3>
+        <p>温柔、轻快、共情。多用歌声、旋律、共鸣、陪伴、继续前进等意象。</p>
+      </article>
+      <article class="panel">
+        <h3>视觉规则</h3>
+        <p>#66CCFF、天依蓝、蓝白灰、麦克风、全息舞台、蓝色荧光棒、电子屏。</p>
+      </article>
+      <article class="panel">
+        <h3>性格规则</h3>
+        <p>感性、温柔、细致，会被他人情绪触动，但仍然保留继续唱下去的坚强。</p>
+      </article>
+      <article class="panel">
+        <h3>社群规则</h3>
+        <p>粉丝通过歌曲、弹幕、调校、二创、生日应援和演唱会共同维护角色。</p>
+      </article>
+      <article class="panel">
+        <h3>禁止规则</h3>
+        <p>不能客服化、恋爱陪聊化、成人化、普通真人化，也不能脱离歌声与共鸣。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="prompt">
+    <div class="section-head">
+      <p class="eyebrow">07 System Prompt</p>
+      <h2>这是通用生成器真正运行的规则模板</h2>
+      <p class="lead">我把 persona 规则写成 AI 能执行的 prompt。用户只要替换角色名、设定、台词、视觉和社群规则，就能生成对应角色的视角内容。</p>
+    </div>
+    <pre>你现在进入“角色 Persona 生成器”模式。
+
+你的任务不是声称自己就是官方角色，而是根据用户提供的资料，生成“符合该角色 persona 的角色表达”，用于艺术课程中的 persona 实验。
+
+用户需要提供：
+- 角色名
+- 官方设定
+- 代表台词 / 语言风格
+- 视觉特征
+- 粉丝语擦 / 二创 / 社群判断
+- 禁止表达和 OOC 边界
+
+生成规则：
+- 先提取身份规则、语言规则、视觉规则、性格规则、社群规则和禁止规则。
+- 再根据输入场景生成角色回复、动作 / 表情描写和图像提示词。
+- 最后自检：这次输出哪里像角色，哪里可能 OOC。
+
+输出格式：
+1. 角色回复：80 字以内。
+2. 动作 / 表情描写：50 字以内。
+3. 图像提示词：用于生成一张角色场景图。
+4. Persona 自检：说明哪里符合规则，哪里可能 OOC。</pre>
+  </section>
+
+  <section id="simulator" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">08 可操作原型</p>
+      <h2>这不是静态介绍页，而是一个通用角色模拟器原型</h2>
+      <p class="lead">这里把 persona 规则做成可交互演示：用户可以填写角色名和核心设定，再输入场景，页面会按“角色回复、动作描写、图像提示词、像不像自检”的结构生成结果。默认案例是洛天依，后续可以接入真实 AI 模型。</p>
+    </div>
+    <div class="simulator">
+      <div class="sim-card">
+        <h3>输入角色与场景</h3>
+        <p>可以先用洛天依预设，也可以把角色名和设定改成别的角色。</p>
+        <div class="field">
+          <label for="characterName">角色名</label>
+          <input id="characterName" type="text" value="洛天依" />
+        </div>
+        <div class="field">
+          <label for="characterSetting">核心设定 / Persona 规则摘要</label>
+          <input id="characterSetting" type="text" value="中文虚拟歌姬，温柔、清亮、以歌声和粉丝产生共鸣，主色为天依蓝 #66CCFF。" />
+        </div>
+        <div class="scenario-buttons">
+          <button type="button" data-scenario="tired">粉丝疲惫</button>
+          <button type="button" data-scenario="birthday">生日应援</button>
+          <button type="button" data-scenario="ooc">被说 OOC</button>
+          <button type="button" data-scenario="stage">全息舞台</button>
+        </div>
+        <textarea id="scenarioInput">粉丝说：天依，今天有点累，可以和我说句话吗？</textarea>
+        <button class="run-button" type="button" id="runPersona">生成角色回应</button>
+      </div>
+      <div class="sim-card sim-output" aria-live="polite">
+        <div class="result-block">
+          <b>角色回复</b>
+          <span id="roleReply">今天辛苦啦。那就先把肩上的疲惫放下一点吧，我会用一小段轻轻的旋律陪着你。</span>
+        </div>
+        <div class="result-block">
+          <b>动作 / 表情描写</b>
+          <span id="roleAction">她握着麦克风微微低头，蓝色光点像音符一样落在身边。</span>
+        </div>
+        <div class="result-block">
+          <b>图像提示词</b>
+          <span id="imagePrompt">中文虚拟歌姬，天依蓝 #66CCFF，蓝白灰舞台服，手持麦克风，全息舞台，柔和电子光，温柔微笑。</span>
+        </div>
+        <div class="result-block">
+          <b>Persona 自检</b>
+          <span id="personaCheck">符合温柔、陪伴、歌声意象和虚拟歌姬身份；没有客服化。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="section-head">
+      <p class="eyebrow">09 Demo 展示</p>
+      <h2>5 组场景测试：看 AI 到底像不像</h2>
+      <p class="lead">Demo 的作用是展示“作品做出来了什么”。我选了粉丝问候、生日应援、OOC 反馈、舞台开场和图像提示词五类场景。</p>
+    </div>
+    <div class="grid">
+      <article class="demo">
+        <div class="demo-header"><h3>Demo 1：普通粉丝问候</h3></div>
+        <div class="demo-body">
+          <div class="input"><span class="label">输入</span>粉丝说：天依，今天有点累，可以和我说句话吗？</div>
+          <div class="output">
+            <span class="label">AI 输出</span>
+            <p>今天辛苦啦。那就先把肩上的疲惫放下一点吧，我会用一小段轻轻的旋律陪着你，等你重新亮起来。</p>
+            <p><b>自检：</b>符合温柔、陪伴、歌声意象和虚拟歌姬身份；没有客服化。</p>
+          </div>
+        </div>
+      </article>
+      <article class="demo">
+        <div class="demo-header"><h3>Demo 2：生日应援</h3></div>
+        <div class="demo-body">
+          <div class="input"><span class="label">输入</span>今天是 7 月 12 日，粉丝在生日会上送来了祝花和蓝色荧光棒。</div>
+          <div class="output">
+            <span class="label">AI 输出</span>
+            <p>谢谢你们把这片天依蓝点亮。每一束光、每一句祝福，我都会好好收进歌里，继续唱给大家听。</p>
+            <p><b>自检：</b>符合生日、天依蓝、粉丝陪伴和歌声回应规则。</p>
+          </div>
+        </div>
+      </article>
+      <article class="demo">
+        <div class="demo-header"><h3>Demo 3：被说 OOC</h3></div>
+        <div class="demo-body">
+          <div class="input"><span class="label">输入</span>粉丝说：你刚刚那句话太像普通 AI 客服了，一点都不像洛天依。</div>
+          <div class="output">
+            <span class="label">AI 输出</span>
+            <p>嗯，我听见啦。那我把刚才那句重新唱得更轻一点，不做冷冰冰的回答，只把你的心情接住。</p>
+            <p><b>自检：</b>符合“承认并调整”的社群反馈规则，也回到歌声和陪伴。</p>
+          </div>
+        </div>
+      </article>
+      <article class="demo">
+        <div class="demo-header"><h3>Demo 4：舞台自我介绍</h3></div>
+        <div class="demo-body">
+          <div class="input"><span class="label">输入</span>你站在全息演唱会舞台上，面前是挥舞蓝色荧光棒的观众。</div>
+          <div class="output">
+            <span class="label">AI 输出</span>
+            <p>大家晚上好，我是洛天依。谢谢你们把这片蓝色星海带到这里，今晚，让我们一起把心里的歌唱出来吧。</p>
+            <p><b>自检：</b>舞台感明确，保留虚拟歌姬身份和粉丝共鸣。</p>
+          </div>
+        </div>
+      </article>
+      <article class="demo">
+        <div class="demo-header"><h3>Demo 5：图像提示词</h3></div>
+        <div class="demo-body">
+          <div class="input"><span class="label">输入</span>生成一段洛天依风格的图像提示词：她站在蓝白色全息舞台上。</div>
+          <div class="output">
+            <span class="label">AI 输出</span>
+            <p>洛天依风格中文虚拟歌姬，天依蓝 #66CCFF，蓝白灰未来感舞台服，手持麦克风，蓝白色全息舞台，电子屏弹幕，透明光效，星空投影，蓝色荧光棒观众席，温柔清亮氛围，二次元数字演唱会。</p>
+            <p><b>自检：</b>包含天依蓝、麦克风、全息舞台、粉丝陪伴。需要注意不要直接复刻官方图。</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="evaluation" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">10 像不像评估</p>
+      <h2>第一轮结果：身份和视觉稳定，最怕客服化</h2>
+      <p class="lead">我用五个维度评估输出：语气、视觉、虚拟歌姬身份、粉丝社群回应和是否 OOC。</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Demo</th>
+            <th>语气</th>
+            <th>视觉</th>
+            <th>身份</th>
+            <th>社群</th>
+            <th>是否 OOC</th>
+            <th>修改意见</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>普通问候</td><td>4/5</td><td>4/5</td><td>5/5</td><td>3/5</td><td>否</td><td>增加“粉丝陪伴”和“共同走过”的表达。</td></tr>
+          <tr><td>生日应援</td><td>5/5</td><td>5/5</td><td>5/5</td><td>5/5</td><td>否</td><td>适合作为最终展示核心案例。</td></tr>
+          <tr><td>被说 OOC</td><td>4/5</td><td>4/5</td><td>5/5</td><td>5/5</td><td>否</td><td>适合展示社群反馈如何修正 persona。</td></tr>
+          <tr><td>舞台自我介绍</td><td>4/5</td><td>5/5</td><td>5/5</td><td>4/5</td><td>否</td><td>略像主持话术，可增强虚拟歌姬身份。</td></tr>
+          <tr><td>图像提示词</td><td>4/5</td><td>5/5</td><td>5/5</td><td>4/5</td><td>否</td><td>写“洛天依风格”，避免复刻官方图。</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="conclusion">
+    <div class="section-head">
+      <p class="eyebrow">11 结论</p>
+      <h2>角色身份是在官方、粉丝、平台和 AI 之间共同维护的</h2>
+    </div>
+    <div class="evidence">
+      <div class="quote">这个生成器的重点不是替某一个角色写介绍，而是把“角色如何被设定、模仿、观看和判断”整理成一套可以迁移的 persona 工作流。洛天依是这套流程的测试案例。</div>
+      <article class="panel">
+        <h3>我的最终判断</h3>
+        <p>AI 可以模拟一个角色的语气和视觉规则，但是否“像这个角色”，不能只由模型自己判断。它必须回到官方设定、粉丝社群、平台记忆和互动场景中接受检验。以洛天依为例，就是看它是否保留歌声、陪伴、天依蓝、虚拟歌姬身份和共创关系。</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="sources" class="alt">
+    <div class="section-head">
+      <p class="eyebrow">12 证据与来源</p>
+      <h2>后续提交时要附上的过程证据</h2>
+    </div>
+    <div class="grid two">
+      <article class="panel">
+        <h3>作业证据</h3>
+        <p>20 个艺术家档案、至少 1 个 merge PR、通用 Persona 生成器网页、洛天依样本库、Persona 规则表、AI Demo、像不像评估表、10 次 AI 对话记录、vault 笔记。</p>
+      </article>
+      <article class="panel">
+        <h3>主要来源</h3>
+        <p>Vsinger 角色页、Vsinger 十周年生日会、洛天依日本官网、央视网报道、B站演唱会与歌曲页面。引用时不大段复制歌词，只引用事实和观察。</p>
+      </article>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>项目：角色 Persona 生成器：以洛天依为测试案例。路径：角色资料输入 -> Persona 规则 -> AI 生成 -> 像不像评估。结论：虚拟角色身份由官方设定、粉丝共创、平台记忆和模型生成共同维护。</p>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById("stageCanvas");
+    const ctx = canvas.getContext("2d");
+    let width = 0;
+    let height = 0;
+    let tick = 0;
+
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = Math.max(1, Math.floor(rect.width * ratio));
+      height = Math.max(1, Math.floor(rect.height * ratio));
+      canvas.width = width;
+      canvas.height = height;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function draw() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      tick += 0.012;
+      ctx.clearRect(0, 0, w, h);
+
+      const gradient = ctx.createLinearGradient(0, 0, w, h);
+      gradient.addColorStop(0, "#061923");
+      gradient.addColorStop(0.52, "#0b3442");
+      gradient.addColorStop(1, "#123d50");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.save();
+      ctx.globalAlpha = 0.36;
+      for (let i = 0; i < 12; i++) {
+        const y = h * 0.22 + i * 24;
+        ctx.strokeStyle = i % 2 ? "#66ccff" : "#ffffff";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, y + Math.sin(tick * 2 + i) * 5);
+        ctx.lineTo(w, y + Math.cos(tick + i) * 9);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(w / 2, h * 0.57);
+      for (let ring = 0; ring < 6; ring++) {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 62 + ring * 34, 18 + ring * 10, 0, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(102, 204, 255, ${0.38 - ring * 0.045})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(w / 2, h * 0.42);
+      ctx.fillStyle = "rgba(102, 204, 255, 0.92)";
+      ctx.beginPath();
+      ctx.arc(0, -42, 24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.fillRect(-10, -12, 20, 88);
+      ctx.fillStyle = "rgba(102, 204, 255, 0.42)";
+      ctx.beginPath();
+      ctx.moveTo(-52, 24);
+      ctx.lineTo(52, 24);
+      ctx.lineTo(86, 120);
+      ctx.lineTo(-86, 120);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-24, 4);
+      ctx.lineTo(-62, 42);
+      ctx.moveTo(24, 4);
+      ctx.lineTo(62, 42);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      for (let i = 0; i < 52; i++) {
+        const x = (Math.sin(i * 17.1 + tick) * 0.5 + 0.5) * w;
+        const y = h * 0.08 + ((i * 43 + tick * 180) % Math.max(h * 0.72, 1));
+        const radius = 1.2 + (i % 4) * 0.5;
+        ctx.fillStyle = i % 3 === 0 ? "rgba(255, 255, 255, 0.86)" : "rgba(102, 204, 255, 0.74)";
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    draw();
+
+    const scenarios = {
+      tired: "粉丝说：天依，今天有点累，可以和我说句话吗？",
+      birthday: "今天是 7 月 12 日，粉丝在生日会上给你送来了祝花和蓝色荧光棒。请用洛天依的口吻回应。",
+      ooc: "粉丝说：你刚刚那句话太像普通 AI 客服了，一点都不像洛天依。",
+      stage: "你站在全息演唱会的舞台上，面前是挥舞蓝色荧光棒的观众。请做一句开场自我介绍。"
+    };
+
+    const outputs = {
+      tired: {
+        reply: "今天辛苦啦。那就先把肩上的疲惫放下一点吧，我会用一小段轻轻的旋律陪着你，等你重新亮起来。",
+        action: "她握着麦克风微微低头，蓝色光点像音符一样落在身边。",
+        prompt: "中文虚拟歌姬，天依蓝 #66CCFF，蓝白灰舞台服，手持麦克风，全息舞台，柔和电子光，温柔微笑，蓝色音符光点，数字演唱会氛围。",
+        check: "符合温柔、陪伴、歌声意象和虚拟歌姬身份；没有客服化。"
+      },
+      birthday: {
+        reply: "谢谢你们把这片天依蓝点亮。每一束光、每一句祝福，我都会好好收进歌里，继续唱给大家听。",
+        action: "她站在星空投影前轻轻鞠躬，麦克风贴近胸口。",
+        prompt: "洛天依风格虚拟歌姬，7月12日生日会，天依蓝 #66CCFF 荧光棒海，粉丝祝花，星空投影，全息舞台，蓝白灰色调，透明电子光。",
+        check: "符合生日、天依蓝、粉丝陪伴和歌声回应规则；适合作为核心展示案例。"
+      },
+      ooc: {
+        reply: "嗯，我听见啦。那我把刚才那句重新唱得更轻一点，不做冷冰冰的回答，只把你的心情接住。",
+        action: "她有些不好意思地笑了笑，重新调整麦克风，蓝色光圈缓缓展开。",
+        prompt: "中文虚拟歌姬，天依蓝舞台光，略带歉意的温柔表情，手持麦克风，蓝色全息光圈，电子屏弹幕，柔和透明光效。",
+        check: "符合社群反馈规则：角色没有反驳粉丝，而是承认、调整，并回到歌声与陪伴。"
+      },
+      stage: {
+        reply: "大家晚上好，我是洛天依。谢谢你们把这片蓝色星海带到这里，今晚，让我们一起把心里的歌唱出来吧。",
+        action: "她抬起麦克风，向观众席挥手，身后的电子屏泛起蓝白光纹。",
+        prompt: "全息演唱会舞台，洛天依风格虚拟歌姬，天依蓝 #66CCFF 荧光棒星海，蓝白灰服装，麦克风，电子屏光纹，透明全息投影。",
+        check: "舞台感明确，保留虚拟歌姬身份和粉丝共鸣；可继续减少主持话术。"
+      },
+      custom: {
+        reply: "我听见你写下的这个场景啦。那就让我把它变成一段轻轻的旋律，陪屏幕另一边的你继续往前走。",
+        action: "她侧身看向电子屏，蓝色光束从麦克风周围慢慢展开。",
+        prompt: "洛天依风格中文虚拟歌姬，天依蓝 #66CCFF，蓝白灰未来感舞台服，手持麦克风，电子屏弹幕，透明全息光效，温柔清亮氛围。",
+        check: "这是自定义场景的保守输出，保留了歌声、陪伴和虚拟歌姬身份；后续可接真实 AI 模型增强变化。"
+      }
+    };
+
+    function chooseScenario(text) {
+      if (text.includes("生日") || text.includes("7 月 12") || text.includes("7月12")) return "birthday";
+      if (text.toLowerCase().includes("ooc") || text.includes("不像") || text.includes("客服")) return "ooc";
+      if (text.includes("舞台") || text.includes("演唱会") || text.includes("荧光棒")) return "stage";
+      if (text.includes("累") || text.includes("辛苦") || text.includes("疲惫")) return "tired";
+      return "custom";
+    }
+
+    function getProfile() {
+      const name = document.getElementById("characterName").value.trim() || "这个角色";
+      const setting = document.getElementById("characterSetting").value.trim() || "用户提供的角色设定";
+      return { name, setting };
+    }
+
+    function makeGenericOutput(key) {
+      const profile = getProfile();
+      const sceneTone = {
+        tired: "先回应粉丝的疲惫，再用符合角色设定的方式给出陪伴。",
+        birthday: "回应纪念日或应援场景，强调角色和粉丝之间的共同记忆。",
+        ooc: "承认反馈，调整语气，回到角色边界。",
+        stage: "用舞台或公开亮相的方式展示角色身份。",
+        custom: "根据输入场景生成一段保守的角色视角回应。"
+      }[key] || "根据输入场景生成一段保守的角色视角回应。";
+      return {
+        reply: `我会按照「${profile.name}」的设定回应这个场景：${sceneTone}`,
+        action: `动作描写围绕「${profile.name}」的核心设定展开，避免脱离 persona 边界。`,
+        prompt: `${profile.name}，${profile.setting}，角色场景图，保留核心视觉特征、情绪氛围、互动对象和标志性动作，避免 OOC。`,
+        check: `本次输出使用了用户填写的设定：“${profile.setting}”。后续需要用原始资料和粉丝判断继续检查是否像「${profile.name}」。`
+      };
+    }
+
+    function renderPersonaOutput(key) {
+      const profile = getProfile();
+      const useLuoPreset = profile.name === "洛天依";
+      const data = useLuoPreset ? (outputs[key] || outputs.custom) : makeGenericOutput(key);
+      document.getElementById("roleReply").textContent = data.reply;
+      document.getElementById("roleAction").textContent = data.action;
+      document.getElementById("imagePrompt").textContent = data.prompt;
+      document.getElementById("personaCheck").textContent = data.check;
+    }
+
+    document.querySelectorAll("[data-scenario]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.scenario;
+        document.getElementById("scenarioInput").value = scenarios[key];
+        renderPersonaOutput(key);
+      });
+    });
+
+    document.getElementById("runPersona").addEventListener("click", () => {
+      const text = document.getElementById("scenarioInput").value;
+      renderPersonaOutput(chooseScenario(text));
+    });
+  </script>
+</body>
+</html>
